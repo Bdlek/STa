@@ -4,6 +4,254 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cetus Dashboard</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #12121a;
+      --bg3: #1a1a28;
+      --card: #16162a;
+      --border: rgba(255,255,255,0.08);
+      --text: #e0e0e8;
+      --text2: #8888a0;
+      --accent: #00e5ff;
+      --accent2: #7c4dff;
+      --gold: #ffd700;
+      --green: #00e676;
+      --red: #ff1744;
+      --orange: #ff9100;
+      --pink: #ff4081;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono: 'SF Mono', 'Cascadia Code', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .panel { width: 100%; min-height: 400px; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, var(--bg2) 0%, #1a1030 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .team-logo {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--bg3); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(0,229,255,0.2); overflow: hidden;
+    }
+    .team-logo:empty { display: none; }
+    .team-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .header-info { display: flex; flex-direction: column; }
+    .name { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+    .subtitle { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .header-right { display: flex; gap: 8px; }
+    .stat-pill {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 12px; padding: 4px 10px;
+      font-size: 12px; font-family: var(--mono);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .stat-label { color: var(--gold); font-weight: 700; }
+    .stat-pill.street { color: var(--accent); }
+
+    /* Tabs */
+    .tabs {
+      display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; border-bottom: 1px solid var(--border);
+      background: var(--bg2); flex-shrink: 0;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0; padding: 10px 14px; font-size: 12px;
+      color: var(--text2); background: none; border: none;
+      cursor: pointer; transition: color 0.2s, border-color 0.2s;
+      border-bottom: 2px solid transparent; white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Content */
+    .content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .pnl { display: none; padding: 12px 14px; }
+    .pnl.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 11px; color: var(--text2); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .card-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 4px 0;
+    }
+    .card-row .label { color: var(--text2); font-size: 12px; }
+    .card-row .value { font-weight: 600; font-family: var(--mono); font-size: 13px; }
+    .card-row .value.accent { color: var(--accent); }
+    .card-row .value.gold { color: var(--gold); }
+    .card-row .value.green { color: var(--green); }
+    .card-row .value.red { color: var(--red); }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    /* Progress Bar */
+    .bar-wrap { margin-top: 6px; }
+    .bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--text2); margin-bottom: 3px;
+    }
+    .bar-track {
+      height: 6px; background: var(--bg);
+      border-radius: 3px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.5s ease; background: var(--accent);
+    }
+    .bar-fill.gold { background: linear-gradient(90deg, #b8860b, var(--gold)); }
+    .bar-fill.green { background: linear-gradient(90deg, #004d40, var(--green)); }
+    .bar-fill.pink { background: linear-gradient(90deg, #880e4f, var(--pink)); }
+    .bar-fill.orange { background: linear-gradient(90deg, #e65100, var(--orange)); }
+    .bar-fill.red { background: linear-gradient(90deg, #b71c1c, var(--red)); }
+
+    /* Badge / Chip */
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 10px; font-size: 11px;
+      font-weight: 500; background: var(--bg3);
+      border: 1px solid var(--border); color: var(--text2);
+    }
+    .chip.accent { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--accent); }
+    .chip.gold { background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); color: var(--gold); }
+    .chip.green { background: rgba(0,230,118,0.1); border-color: rgba(0,230,118,0.3); color: var(--green); }
+    .chip.pink { background: rgba(255,64,129,0.1); border-color: rgba(255,64,129,0.3); color: var(--pink); }
+    .chip.orange { background: rgba(255,145,0,0.1); border-color: rgba(255,145,0,0.3); color: var(--orange); }
+
+    /* Radar Chart */
+    .radar-wrap { display: flex; justify-content: center; padding: 10px 0; }
+
+    /* NPC Card */
+    .npc-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px;
+      margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s;
+    }
+    .npc-card:hover { border-color: var(--accent); }
+    .npc-header { display: flex; align-items: center; gap: 10px; }
+    .npc-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg3); display: flex; align-items: center;
+      justify-content: center; font-size: 16px; flex-shrink: 0;
+    }
+    .npc-name { font-weight: 600; font-size: 13px; }
+    .npc-sub { font-size: 11px; color: var(--text2); }
+    .npc-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .npc-detail {
+      display: none; margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .npc-card.open .npc-detail { display: block; }
+
+    /* Item Grid */
+    .item-tile {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px; text-align: center;
+    }
+    .item-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+    .item-desc { font-size: 10px; color: var(--text2); line-height: 1.3; }
+
+    /* Team Badge */
+    .team-badge-card {
+      background: linear-gradient(135deg, var(--card) 0%, rgba(0,229,255,0.05) 100%);
+      border: 1px solid rgba(0,229,255,0.2);
+    }
+    .team-badge-logo {
+      width: 56px; height: 56px; object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(0,229,255,0.3));
+    }
+
+    /* Schedule */
+    .sched-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px; border-radius: 8px;
+      background: var(--bg3); margin-bottom: 6px;
+    }
+    .sched-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .sched-dot.train { background: var(--accent); }
+    .sched-dot.game { background: var(--red); }
+    .sched-dot.rest { background: var(--green); }
+    .sched-dot.event { background: var(--orange); }
+    .sched-info { flex: 1; }
+    .sched-type { font-size: 12px; font-weight: 600; }
+    .sched-detail { font-size: 10px; color: var(--text2); }
+    .sched-date { font-size: 10px; color: var(--text2); font-family: var(--mono); flex-shrink: 0; }
+
+    /* Contract Card */
+    .contract-card {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; margin-bottom: 8px;
+    }
+    .contract-brand {
+      font-size: 16px; font-weight: 700; letter-spacing: 1px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .contract-brand .brand-logo {
+      height: 24px; width: auto;
+      filter: brightness(0) invert(1); opacity: 0.9;
+    }
+    .contract-meta {
+      display: flex; justify-content: space-between;
+      margin-top: 6px; font-size: 11px; color: var(--text2);
+    }
+    .contract-amount {
+      font-size: 20px; font-weight: 700;
+      color: var(--gold); font-family: var(--mono);
+    }
+
+    /* Review */
+    .review-card {
+      background: var(--bg3); border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0; padding: 10px; margin-bottom: 8px;
+    }
+    .review-source { font-size: 10px; color: var(--accent); font-weight: 600; text-transform: uppercase; }
+    .review-score { font-size: 18px; font-weight: 700; color: var(--gold); font-family: var(--mono); }
+    .review-text { font-size: 12px; color: var(--text); margin-top: 4px; line-height: 1.4; }
+
+    /* Empty State */
+    .empty { text-align: center; color: var(--text2); padding: 30px; font-size: 12px; }
+
+    /* Scrollbar */
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 360px) {
+      .header { padding: 10px; }
+      .pnl { padding: 10px; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
 <body>
   <div class="panel">
@@ -34,6 +282,387 @@
       <div class="pnl" id="p-skills"></div>
       <div class="pnl" id="p-career"></div>
       <div class="pnl" id="p-media"></div>
+      <div class="pnl" id="p-contacts"></div>
+      <div class="pnl" id="p-gear"></div>
+    </div>
+  </div>
+
+<script>
+// ─── Helpers ───
+const g = (o, path, d = '') => {
+  if (!o) return d;
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  let v = o;
+  for (const p of parts) { v = v?.[p]; }
+  return (v === null || v === undefined || v === '') ? d : v;
+};
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+const repTitles = [
+  ['无名之辈','旁观者','无'],
+  ['街头混混','候补名单','试训球员'],
+  ['小有名气','轮换球员','发展联盟'],
+  ['令人畏惧','主力核心','角色球员'],
+  ['地下传奇','球队王牌','全明星'],
+  ['纽约之王','更衣室之魂','超级巨星'],
+];
+const relationColor = (stage) => {
+  if (stage.includes('恋人') || stage.includes('灵魂')) return 'pink';
+  if (stage.includes('暧昧')) return 'orange';
+  if (stage.includes('亲近') || stage.includes('青梅')) return 'green';
+  if (stage.includes('熟识')) return 'accent';
+  return '';
+};
+const genderIcon = (sex, sg) => {
+  if (sg === 'Alpha') return '⚔️';
+  if (sg === 'Omega') return '🌸';
+  if (sg === 'Beta') return '◈';
+  return sex === '女' ? '♀' : '♂';
+};
+
+// ─── NBA 球队 Logo ───
+const TEAM_LOGOS = {
+  'ATL': 'https://cdn.nba.com/logos/nba/1610612737/logo.svg',
+  'BOS': 'https://cdn.nba.com/logos/nba/1610612738/logo.svg',
+  'BKN': 'https://cdn.nba.com/logos/nba/1610612751/logo.svg',
+  'CHA': 'https://cdn.nba.com/logos/nba/1610612766/logo.svg',
+  'CHI': 'https://cdn.nba.com/logos/nba/1610612741/logo.svg',
+  'CLE': 'https://cdn.nba.com/logos/nba/1610612739/logo.svg',
+  'DAL': 'https://cdn.nba.com/logos/nba/1610612742/logo.svg',
+  'DEN': 'https://cdn.nba.com/logos/nba/1610612743/logo.svg',
+  'DET': 'https://cdn.nba.com/logos/nba/1610612765/logo.svg',
+  'GSW': 'https://cdn.nba.com/logos/nba/1610612744/logo.svg',
+  'HOU': 'https://cdn.nba.com/logos/nba/1610612745/logo.svg',
+  'IND': 'https://cdn.nba.com/logos/nba/1610612754/logo.svg',
+  'LAC': 'https://cdn.nba.com/logos/nba/1610612746/logo.svg',
+  'LAL': 'https://cdn.nba.com/logos/nba/1610612747/logo.svg',
+  'MEM': 'https://cdn.nba.com/logos/nba/1610612763/logo.svg',
+  'MIA': 'https://cdn.nba.com/logos/nba/1610612748/logo.svg',
+  'MIL': 'https://cdn.nba.com/logos/nba/1610612749/logo.svg',
+  'MIN': 'https://cdn.nba.com/logos/nba/1610612750/logo.svg',
+  'NOP': 'https://cdn.nba.com/logos/nba/1610612740/logo.svg',
+  'NYK': 'https://cdn.nba.com/logos/nba/1610612752/logo.svg',
+  'OKC': 'https://cdn.nba.com/logos/nba/1610612760/logo.svg',
+  'ORL': 'https://cdn.nba.com/logos/nba/1610612753/logo.svg',
+  'PHI': 'https://cdn.nba.com/logos/nba/1610612755/logo.svg',
+  'PHX': 'https://cdn.nba.com/logos/nba/1610612756/logo.svg',
+  'POR': 'https://cdn.nba.com/logos/nba/1610612757/logo.svg',
+  'SAC': 'https://cdn.nba.com/logos/nba/1610612758/logo.svg',
+  'SAS': 'https://cdn.nba.com/logos/nba/1610612759/logo.svg',
+  'TOR': 'https://cdn.nba.com/logos/nba/1610612761/logo.svg',
+  'UTA': 'https://cdn.nba.com/logos/nba/1610612762/logo.svg',
+  'WAS': 'https://cdn.nba.com/logos/nba/1610612764/logo.svg',
+};
+
+// ─── 品牌 Logo ───
+const BRAND_LOGOS = {
+  'Nike':      'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg',
+  'Adidas':    'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg',
+  'Jordan':    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Jumpman_logo.svg/800px-Jumpman_logo.svg.png',
+  'Puma':      'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Puma_Logo.svg/800px-Puma_Logo.svg.png',
+  'Under Armour': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Under_armour_logo.svg/800px-Under_armour_logo.svg.png',
+  'New Balance': 'https://upload.wikimedia.org/wikipedia/commons/e/ea/New_Balance_logo.svg',
+  'Converse':  'https://upload.wikimedia.org/wikipedia/commons/9/98/Converse_logo.svg',
+  'Reebok':    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Reebok_logo.svg/800px-Reebok_logo.svg.png',
+  'Anta':      'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Anta_Logo.svg/800px-Anta_Logo.svg.png',
+  'Li-Ning':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Li-Ning_logo.svg/800px-Li-Ning_logo.svg.png',
+};
+const getTeamLogo = (abbr) => TEAM_LOGOS[abbr?.toUpperCase()] || '';
+const getBrandLogo = (name) => BRAND_LOGOS[name] || '';
+
+let state = null;
+
+async function readData() {
+  try {
+    await waitGlobalInitialized('Mvu');
+    await waitUntil(() => _.has(getVariables({ type: 'message' }), 'stat_data'));
+    state = Mvu.getMvuData({ type: 'message' }) || getVariables({ type: 'message' }) || {};
+    state = state.stat_data || state;
+  } catch {
+    state = {};
+  }
+}
+
+function renderOverview() {
+  const s = g(state, '主角.状态', {});
+  const asset = g(state, '主角.资产', {});
+  const rep = g(state, '主角.声望', {});
+  const career = g(state, '职业生涯', {});
+  const time = g(state, '系统.时间', {});
+  const badges = g(state, '主角.徽章', {});
+  const badgeKeys = Object.keys(badges);
+  let html = '';
+
+  html += `<div class="card">
+    <div class="card-title">当前状态</div>
+    <div class="card-row"><span class="label">身体</span><span class="value ${s.身体状态 === '精力充沛' ? 'green' : s.身体状态 === '重伤' ? 'red' : ''}">${s.身体状态 || '健康'}</span></div>
+    <div class="card-row"><span class="label">生理</span><span class="value">${s?.生理状态?.状态 || '常规'}</span></div>
+    <div class="card-row"><span class="label">衣着</span><span class="value" style="font-size:11px">${s?.衣着?.上装 || ''} / ${s?.衣着?.下装 || ''}</span></div>
+    ${time.赛程阶段 && time.赛程阶段 !== '休赛期' ? `<div class="card-row"><span class="label">赛程</span><span class="value accent">${time.赛程阶段}</span></div>` : ''}
+  </div>`;
+
+  const fatigue = s.疲劳度 || 0;
+  html += `<div class="card">
+    <div class="bar-wrap">
+      <div class="bar-label"><span>疲劳度</span><span>${fatigue}%</span></div>
+      <div class="bar-track"><div class="bar-fill ${fatigue >= 80 ? 'red' : fatigue >= 60 ? 'orange' : fatigue >= 40 ? 'gold' : 'green'}" style="width:${fatigue}%"></div></div>
+    </div>
+  </div>`;
+
+  html += `<div class="card">
+    <div class="card-title">快速数据</div>
+    <div class="grid-2">
+      <div class="card-row"><span class="label">现金</span><span class="value gold">$${asset.现金 || 0}</span></div>
+      <div class="card-row"><span class="label">球队地位</span><span class="value">${career.球队地位 || '无'}</span></div>
+      <div class="card-row"><span class="label">街头声望</span><span class="value accent">${rep?.街头声望?.数值 || 0}</span></div>
+      <div class="card-row"><span class="label">球队声望</span><span class="value accent">${rep?.球队声望?.数值 || 0}</span></div>
+    </div>
+  </div>`;
+
+  if (badgeKeys.length > 0) {
+    html += `<div class="card"><div class="card-title">徽章</div><div style="display:flex;flex-wrap:wrap;gap:6px">`;
+    badgeKeys.forEach(k => { const b = badges[k]; if (b?.名称) html += `<span class="chip gold">${b.图标 || '🏅'} ${b.名称}</span>`; });
+    html += `</div></div>`;
+  }
+
+  if (career?.日程?.下次比赛) {
+    html += `<div class="card"><div class="card-title">下次比赛</div><div class="card-row"><span class="value accent" style="font-size:16px">${career.日程.下次比赛}</span></div></div>`;
+  }
+  return html;
+}
+
+function renderSkills() {
+  const skills = g(state, '主角.技能', {});
+  const phys = g(skills, '基础体能', {});
+  const bball = g(skills, '篮球', {});
+  const life = g(skills, '生活', {});
+  let html = '';
+
+  html += `<div class="card"><div class="card-title">能力雷达</div><div class="radar-wrap"><canvas id="radar-canvas" width="260" height="220"></canvas></div></div>`;
+
+  html += `<div class="card"><div class="card-title">基础体能</div>`;
+  Object.keys(phys).forEach(k => { const v = phys[k] || 0; html += `<div class="bar-wrap"><div class="bar-label"><span>${k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill green" style="width:${v}%"></div></div></div>`; });
+  html += `</div>`;
+
+  html += `<div class="card"><div class="card-title">篮球技能</div>`;
+  Object.keys(bball).forEach(k => { const v = bball[k] || 0; html += `<div class="bar-wrap"><div class="bar-label"><span>${k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill accent" style="width:${v}%"></div></div></div>`; });
+  html += `</div>`;
+
+  html += `<div class="card"><div class="card-title">生活技能</div>`;
+  Object.keys(life).forEach(k => { const v = life[k] || 0; html += `<div class="bar-wrap"><div class="bar-label"><span>${k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill orange" style="width:${v}%"></div></div></div>`; });
+  html += `</div>`;
+  return html;
+}
+
+function drawRadar(data) {
+  const canvas = document.getElementById('radar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2 + 5, r = 80, n = data.length, angleStep = (Math.PI * 2) / n;
+  ctx.clearRect(0, 0, w, h);
+  for (let ring = 1; ring <= 4; ring++) {
+    const rr = (r * ring) / 4;
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + i * angleStep; const x = cx + rr * Math.cos(a); const y = cy + rr * Math.sin(a); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * angleStep; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.stroke(); }
+  ctx.beginPath();
+  data.forEach((d, i) => { const a = -Math.PI / 2 + i * angleStep; const rr = (r * d.value) / 100; const x = cx + rr * Math.cos(a); const y = cy + rr * Math.sin(a); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+  ctx.closePath(); ctx.fillStyle = 'rgba(0,229,255,0.15)'; ctx.fill(); ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.stroke();
+  data.forEach((d, i) => {
+    const a = -Math.PI / 2 + i * angleStep; const rr = (r * d.value) / 100; const x = cx + rr * Math.cos(a); const y = cy + rr * Math.sin(a);
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fillStyle = '#00e5ff'; ctx.fill();
+    const lx = cx + (r + 18) * Math.cos(a); const ly = cy + (r + 18) * Math.sin(a);
+    ctx.fillStyle = '#8888a0'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${d.label} ${d.value}`, lx, ly);
+  });
+}
+
+function renderCareer() {
+  const career = g(state, '职业生涯', {});
+  const schedule = g(career, '日程', {});
+  const locker = g(career, '更衣室', {});
+  const weekArr = g(schedule, '本周安排', []);
+  const team = g(career, '当前球队', {});
+  const teamLogo = getTeamLogo(team.缩写);
+  let html = '';
+
+  if (team.名称) {
+    html += `<div class="card team-badge-card"><div style="display:flex;align-items:center;gap:12px">${teamLogo ? `<img src="${teamLogo}" class="team-badge-logo" alt="${team.缩写}">` : ''}<div><div style="font-size:16px;font-weight:700">${team.名称}</div><div style="font-size:12px;color:var(--text2)">${team.联盟 || ''} · #${team.球衣号 || ''}</div></div></div></div>`;
+  }
+
+  html += `<div class="card"><div class="card-title">更衣室</div>
+    <div class="card-row"><span class="label">地位</span><span class="value accent">${locker.更衣室地位 || '新秀'}</span></div>
+    <div class="bar-wrap"><div class="bar-label"><span>队友认可</span><span>${locker.队友认可度 || 0}%</span></div><div class="bar-track"><div class="bar-fill green" style="width:${locker.队友认可度 || 0}%"></div></div></div>
+    <div class="bar-wrap"><div class="bar-label"><span>教练信任</span><span>${locker.教练信任度 || 0}%</span></div><div class="bar-track"><div class="bar-fill accent" style="width:${locker.教练信任度 || 0}%"></div></div></div>
+    <div class="bar-wrap"><div class="bar-label"><span>管理层态度</span><span>${locker.管理层态度 || 0}%</span></div><div class="bar-track"><div class="bar-fill orange" style="width:${locker.管理层态度 || 0}%"></div></div></div>
+    ${locker.教练 ? `<div class="card-row" style="margin-top:8px"><span class="label">教练</span><span class="value">${locker.教练}</span></div>` : ''}
+  </div>`;
+
+  html += `<div class="card"><div class="card-title">本周日程</div>`;
+  if (weekArr.length === 0) { html += `<div class="empty">暂无日程安排</div>`; }
+  else { weekArr.forEach((item) => {
+    const tc = item.类型 === '比赛' ? 'game' : item.类型 === '训练' ? 'train' : item.类型 === '休息' ? 'rest' : 'event';
+    html += `<div class="sched-item"><div class="sched-dot ${tc}"></div><div class="sched-info"><div class="sched-type">${item.类型 || ''} ${item.项目 || ''}</div><div class="sched-detail">${item.对手 ? 'vs ' + item.对手 : ''} ${item.主客场 || ''} ${item.强度 ? '| ' + item.强度 : ''}</div></div><div class="sched-date">${item.日期 || ''}</div></div>`;
+  }); }
+  html += `</div>`;
+
+  const stats = g(schedule, '本月统计', {});
+  html += `<div class="card"><div class="card-title">本月统计</div><div class="grid-3">
+    <div class="card-row" style="flex-direction:column;align-items:center"><span class="value accent">${stats.比赛数 || 0}</span><span class="label">比赛</span></div>
+    <div class="card-row" style="flex-direction:column;align-items:center"><span class="value green">${stats.训练数 || 0}</span><span class="label">训练</span></div>
+    <div class="card-row" style="flex-direction:column;align-items:center"><span class="value" style="color:var(--text2)">${stats.休息数 || 0}</span><span class="label">休息</span></div>
+  </div></div>`;
+  return html;
+}
+
+function renderMedia() {
+  const media = g(state, '职业生涯.媒体形象', {});
+  const social = g(media, '社交媒体', {});
+  const reviews = g(state, '评价.球赛评价', {});
+  const comments = g(state, '评价.社会评论', {});
+  const reviewKeys = Object.keys(reviews);
+  const commentKeys = Object.keys(comments);
+  let html = '';
+
+  html += `<div class="card"><div class="card-title">媒体形象</div>
+    <div class="card-row"><span class="label">公众好感度</span><span class="value ${media.公众好感度 >= 70 ? 'green' : media.公众好感度 < 30 ? 'red' : ''}">${media.公众好感度 || 0}</span></div>
+    <div class="bar-wrap"><div class="bar-track"><div class="bar-fill ${media.公众好感度 >= 70 ? 'green' : 'accent'}" style="width:${media.公众好感度 || 0}%"></div></div></div>
+    <div class="card-row"><span class="label">专业评分</span><span class="value gold">${media.专业评分 || 0}</span></div>
+    <div class="card-row"><span class="label">媒体风评</span><span class="value">${media.媒体风评 || '中立'}</span></div>
+    <div class="card-row"><span class="label">粉丝数</span><span class="value accent">${(social.粉丝数 || 0).toLocaleString()}</span></div>
+    ${(social.人设标签 || []).length > 0 ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${social.人设标签.map((t) => `<span class="chip accent">${t}</span>`).join('')}</div>` : ''}
+    ${(social.热门话题 || []).length > 0 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${social.热门话题.map((t) => `<span class="chip">#${t}</span>`).join('')}</div>` : ''}
+  </div>`;
+
+  html += `<div class="card"><div class="card-title">球赛评价</div>`;
+  if (reviewKeys.length === 0) { html += `<div class="empty">暂无评价</div>`; }
+  else { reviewKeys.slice(-5).reverse().forEach(k => {
+    const r = reviews[k]; if (!r?.来源) return;
+    html += `<div class="review-card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="review-source">${r.来源}</span><span class="review-score">${r.评分 || '--'}</span></div><div class="review-text">${r.内容 || ''}</div><div style="font-size:10px;color:var(--text2);margin-top:4px">${r.日期 || ''} · ${r.类型 || ''}</div></div>`;
+  }); }
+  html += `</div>`;
+
+  if (commentKeys.length > 0) {
+    html += `<div class="card"><div class="card-title">社会评论</div>`;
+    commentKeys.slice(-5).reverse().forEach(k => {
+      const c = comments[k]; if (!c?.来源) return;
+      const st = c.情感倾向 === '正面' ? 'green' : c.情感倾向 === '负面' ? 'red' : '';
+      html += `<div style="padding:6px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:600">${c.来源}</span><span class="chip ${st}" style="font-size:10px">${c.情感倾向 || '中立'}</span></div><div style="font-size:12px;margin-top:4px;line-height:1.4">${c.内容 || ''}</div></div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function renderContacts() {
+  const npcs = g(state, '人脉', {});
+  const keys = Object.keys(npcs);
+  let html = '';
+  if (keys.length === 0) { html += `<div class="empty">暂无人脉关系</div>`; return html; }
+  keys.forEach(k => {
+    const n = npcs[k]; if (!n?.姓名) return;
+    const icon = genderIcon(n.性别, n.第二性别);
+    const color = relationColor(n.关系阶段 || '');
+    const tags = n.人物标签 || [];
+    html += `<div class="npc-card" onclick="this.classList.toggle('open')"><div class="npc-header"><div class="npc-avatar">${icon}</div><div style="flex:1"><div class="npc-name">${n.姓名}</div><div class="npc-sub">${n.别名 || ''} · ${n.第二性别 || ''} · ${n.亲密关系 || n.关系阶段 || '陌生人'}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:700;color:var(--accent)">${n.好感度 || 0}</div><div style="font-size:10px;color:var(--text2)">好感度</div></div></div><div class="npc-chips">${tags.map((t) => `<span class="chip ${color}">${t}</span>`).join('')}${n.状态 !== '活跃' ? `<span class="chip" style="opacity:0.5">${n.状态}</span>` : ''}</div><div class="npc-detail"><div class="card-row"><span class="label">认识途径</span><span class="value">${n.认识途径 || ''}</span></div><div class="card-row"><span class="label">人脉价值</span><span class="value">${n.人脉价值 || ''}</span></div><div class="card-row"><span class="label">上次互动</span><span class="value">${n.上次互动 || '无'}</span></div>${(n.场景偏好 || []).length > 0 ? `<div class="card-row"><span class="label">偏好</span><span class="value" style="font-size:11px">${n.场景偏好.join('、')}</span></div>` : ''}</div></div>`;
+  });
+  return html;
+}
+
+function renderGear() {
+  const inv = g(state, '主角.物品栏', {});
+  const contracts = g(state, '职业生涯.商业合约.活跃合约', []);
+  let html = '';
+
+  if (contracts.length > 0) {
+    html += `<div class="card"><div class="card-title">活跃合约</div>`;
+    contracts.forEach((ct) => {
+      const logoUrl = getBrandLogo(ct.品牌);
+      html += `<div class="contract-card"><div class="contract-brand">${logoUrl ? `<img src="${logoUrl}" class="brand-logo" alt="${ct.品牌}">` : ''}<span>${ct.品牌 || ''}</span></div><div class="contract-meta"><span>${ct.类型 || ''} · ${ct.等级 || ''}</span><span>${ct.状态 || ''}</span></div><div class="contract-amount">$${(ct.金额 || 0).toLocaleString()}</div><div style="font-size:10px;color:var(--text2);margin-top:4px">${ct.签约日 || ''} → ${ct.到期日 || ''}</div>${(ct.年度义务 || []).length > 0 ? `<div style="margin-top:6px;font-size:10px;color:var(--text2)">义务: ${ct.年度义务.join(' / ')}</div>` : ''}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  const categories = ['篮球装备', '衣物', '载具', '武器', '日常用品'];
+  categories.forEach(cat => {
+    const items = inv[cat] || {}; const itemKeys = Object.keys(items);
+    if (itemKeys.length === 0) return;
+    html += `<div class="card"><div class="card-title">${cat}</div><div class="grid-2">`;
+    itemKeys.forEach(ik => {
+      const item = items[ik];
+      html += `<div class="item-tile"><div class="item-name">${ik}</div>${item?.描述 ? `<div class="item-desc">${item.描述}</div>` : ''}${item?.数量 ? `<div style="font-size:10px;color:var(--text2);margin-top:2px">×${item.数量}</div>` : ''}</div>`;
+    });
+    html += `</div></div>`;
+  });
+  if (html === '') html = `<div class="empty">暂无装备</div>`;
+  return html;
+}
+
+function renderAll() {
+  const el = (id) => document.getElementById(id);
+  if (el('p-overview')) el('p-overview').innerHTML = renderOverview();
+  if (el('p-skills')) el('p-skills').innerHTML = renderSkills();
+  if (el('p-career')) el('p-career').innerHTML = renderCareer();
+  if (el('p-media')) el('p-media').innerHTML = renderMedia();
+  if (el('p-contacts')) el('p-contacts').innerHTML = renderContacts();
+  if (el('p-gear')) el('p-gear').innerHTML = renderGear();
+
+  const nameEl = document.querySelector('.name');
+  const subtitleEl = document.querySelector('.subtitle');
+  const cashEl = document.getElementById('h-cash');
+  const streetEl = document.getElementById('h-street');
+  const teamLogoEl = document.getElementById('team-logo');
+  const team = g(state, '职业生涯.当前球队', {});
+  if (nameEl) nameEl.textContent = g(state, '主角.状态.衣着.上装', '') ? 'Cetus Wilder' : 'Cetus';
+  if (subtitleEl) subtitleEl.textContent = `${team.缩写 || 'SG'} · #${team.球衣号 || 0} · ${g(state, '职业生涯.球队地位', '无')}`;
+  if (cashEl) cashEl.textContent = String(g(state, '主角.资产.现金', 0));
+  if (streetEl) streetEl.textContent = String(g(state, '主角.声望.街头声望.数值', 0));
+  if (teamLogoEl) {
+    const logoUrl = getTeamLogo(team.缩写) || team.图标;
+    if (logoUrl) teamLogoEl.innerHTML = `<img src="${logoUrl}" alt="${team.缩写 || ''}">`;
+  }
+
+  setTimeout(() => drawRadar([
+    { label: '速度', value: g(state, '主角.技能.基础体能.速度', 0) },
+    { label: '力量', value: g(state, '主角.技能.基础体能.力量', 0) },
+    { label: '投射', value: Math.round((g(state, '主角.技能.篮球.中投', 0) + g(state, '主角.技能.篮球.远投', 0)) / 2) },
+    { label: '控球', value: g(state, '主角.技能.篮球.控球', 0) },
+    { label: '防守', value: Math.round((g(state, '主角.技能.篮球.内防', 0) + g(state, '主角.技能.篮球.外防', 0) + g(state, '主角.技能.篮球.抢断', 0)) / 3) },
+    { label: '体能', value: g(state, '主角.技能.基础体能.体能', 0) },
+  ]), 100);
+}
+
+async function init() {
+  try {
+    await readData();
+    renderAll();
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.pnl').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const target = document.getElementById('p-' + this.dataset.t);
+        if (target) target.classList.add('active');
+      });
+    });
+    let refreshTimer = null, isRefreshing = false;
+    const refresh = () => {
+      if (isRefreshing) return; isRefreshing = true; clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(async () => { await readData(); renderAll(); isRefreshing = false; }, 500);
+    };
+    if (typeof eventOn === 'function') {
+      eventOn(tavern_events.MESSAGE_UPDATED, refresh);
+      eventOn(tavern_events.MESSAGE_RECEIVED, () => setTimeout(refresh, 1000));
+    }
+  } catch (e) { console.error('Statusbar init error:', e); }
+}
+
+$(() => { errorCatched(init)(); });
+</script>
+</body>
+</html>
       <div class="pnl" id="p-contacts"></div>
       <div class="pnl" id="p-gear"></div>
     </div>
